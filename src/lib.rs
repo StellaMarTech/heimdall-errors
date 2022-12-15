@@ -164,3 +164,109 @@ macro_rules! implement_error_with_kind {
         }
     };
 }
+
+/// Generate the [From<T>] trait implementation for an custom enum error.
+/// # Usage
+/// ```ignore
+///     implement_error_in_enum!($type_, $err_type, $enum_variant);
+/// ```
+/// * **$type_:** the enum error type,
+/// * **$error_type:** the value [T] in [From<T>] trait, this type must implement [ToString] trait,
+/// * **$enum_variant:** the enum error type variant.
+///
+/// # Example
+/// ```
+/// use std::fmt::Debug;
+/// use std::io::Error;
+/// use heimdall_errors::implement_error_in_enum;
+///
+///
+/// // First, create your Error type
+/// #[derive(Debug)]
+/// pub (crate) enum MyErrorType {
+///     Io(Error)
+/// }
+///
+///
+/// // Generate implementation
+/// implement_error_in_enum!(MyErrorType, std::io::Error, MyErrorType::Io);
+/// ```
+///
+///# Code generated
+/// The code
+/// ```ignore
+/// implement_error_in_enum!(MyErrorType, std::io::Error, MyErrorType::Io);
+/// ```
+///
+/// generates the next code
+///
+///```ignore
+/// impl From<std::io::Error> for MyErrorType {
+///    fn from(err: std::io::Error) -> Self {
+///        MyErrorType::Io(err)
+///     }
+/// }
+/// ```
+#[macro_export]
+macro_rules! implement_error_in_enum {
+    ($type_:ident, $err_type: path, $enum_variant: path) => {
+        impl From<$err_type> for $type_ {
+            fn from(error: $err_type) -> $type_ {
+                $enum_variant(error)
+            }
+        }
+    };
+}
+
+/// Generate the [From<T>] trait implementation for an custom enum error using [ToString] trait.
+/// # Usage
+/// ```ignore
+///     implement_error_in_enum!($type_, $err_type, $enum_variant);
+/// ```
+/// * **$type_:** the enum error type,
+/// * **$error_type:** the value [T] in [From<T>] trait, this type must implement [ToString] trait,
+/// * **$enum_variant:** the enum error type variant.
+///
+/// # Example
+/// ```
+/// use std::fmt::Debug;
+/// use std::io::Error;
+/// use heimdall_errors::implement_string_error_in_enum;
+///
+///
+/// // First, create your Error type
+/// #[derive(Debug)]
+/// pub (crate) enum MyErrorType {
+///     Io(String)
+/// }
+///
+///
+/// // Generate implementation
+/// implement_string_error_in_enum!(MyErrorType, std::io::Error, MyErrorType::Io);
+/// ```
+///
+///# Code generated
+/// The code
+/// ```ignore
+/// implement_string_error_in_enum!(MyErrorType, std::io::Error, MyErrorType::Io);
+/// ```
+///
+/// generates the next code
+///
+///```ignore
+/// impl From<std::io::Error> for MyErrorType {
+///    fn from(err: std::io::Error) -> Self {
+///        MyErrorType::Io(err.to_string())
+///     }
+/// }
+/// ```
+#[macro_export]
+macro_rules! implement_string_error_in_enum {
+    ($type_:ident, $err_type: path, $enum_variant: path) => {
+        impl From<$err_type> for $type_ {
+            fn from(error: $err_type) -> $type_ {
+                $enum_variant(error.to_string())
+            }
+        }
+    };
+}
