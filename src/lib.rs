@@ -270,3 +270,41 @@ macro_rules! implement_string_error_in_enum {
         }
     };
 }
+
+/// Implement the [`From`] trait for an struct with an specific structure.
+///
+/// # Params
+/// ```ignore
+/// implement_in_error_in_struct($struct_error, $err_type, $kind);
+/// ```
+/// # Example
+/// ```
+/// use heimdall_errors::implement_in_error_in_struct;
+///
+/// pub enum ErrorKind{
+///     IO,
+/// }
+/// pub struct StructError {
+///     kind: ErrorKind,
+///     message: String,
+///     source: Option<Box<dyn std::error::Error>>
+/// }
+///
+/// // Implement From<std::io::Error> for StructError.
+/// implement_in_error_in_struct!(StructError, std::io::Error, ErrorKind::IO);
+///
+/// ```
+#[macro_export]
+macro_rules! implement_in_error_in_struct {
+    ($struct_error:ident, $err_type: path, $kind: path) => {
+        impl From<$err_type> for $struct_error {
+            fn from(err: $err_type) -> Self {
+                Self {
+                    kind: $kind,
+                    message: err.to_string(),
+                    source: Some(Box::new(err)),
+                }
+            }
+        }
+    };
+}
