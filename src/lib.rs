@@ -1,69 +1,43 @@
 //! Macros for auto impl [From<T>] for errors
 
-/// Generate the [From<T>] trait implementation for an custom error struct with an specific
-/// structure, with ErrorKind, and message attributes;
+/// Implement the [`From`] trait for an struct with kind structure
 ///
-/// * Param 1: the custom error type,
-/// * Param 2: the error type you wants use in From trait,
-/// * Param 3: the corresponding ErrorKind.
-///
+/// # Params
+/// ```ignore
+/// implement_in_error_in_struct($struct_error, $error_type, $error_kind);
+/// ```
 /// # Example
 /// ```
-/// use std::fmt::{Display, Formatter, Result, Debug};
-/// use std::io::Error;
-/// use std::env::VarError;
 /// use heimdall_errors::implement_error;
+/// use std::env::VarError;
 ///
-/// // First, create your ErrorKind
-///#[derive(Debug, PartialEq, Copy, Clone)]
-/// pub (crate) enum ErrorKind {
-///     Io,
-///     Env
+/// pub enum ErrorKind {
+///     Var,
 /// }
 ///
-/// impl ToString for ErrorKind {
-///     fn to_string(&self) -> String {
-///         format!("{:?}", &self)
-///     }
-/// }
-///
-/// // Next, create your Error struct
-/// #[derive(Debug, PartialEq, Clone)]
-/// pub (crate) struct MyErrorType {
+/// pub struct StructError {
 ///     kind: ErrorKind,
-///     message: String
+///     message: String,
 /// }
 ///
-/// // Implement the Display trait
-/// impl Display for MyErrorType {
-///     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-///         write!(
-///             f,
-///             "kind: {} message: {}",
-///             self.kind.to_string(),
-///             self.message
-///         )
-///     }
-/// }
+/// // Implement From<VarError> for StructError.
+/// implement_error!(StructError, VarError, ErrorKind::Var);
 ///
-/// // Generate implementations
-/// implement_error!(MyErrorType, std::io::Error, ErrorKind::Io);
-/// implement_error!(MyErrorType, VarError, ErrorKind::Env);
 /// ```
 ///
 ///# Code generated
 /// The code
 /// ```ignore
-/// implement_error!(MyErrorType, std::io::Error, ErrorKind::Io);
+/// implement_error!(StructError, VarError, ErrorKind::Var);
 /// ```
 ///
 /// generates the next code
 ///
 ///```ignore
-/// impl From<std::io::Error> for MyErrorType {
-///    fn from(err: std::io::Error) -> Self {
+/// impl From<VarError> for StructError {
+///    fn from(err: VarError) -> Self {
 ///        Self {
-///            kind: ErrorKind::Io,
+///            kind: ErrorKind::Var,
 ///            message: err.to_string(),
 ///        }
 ///     }
@@ -71,11 +45,11 @@
 /// ```
 #[macro_export]
 macro_rules! implement_error {
-    ($err:ident, $t: path, $kind: path) => {
-        impl From<$t> for $err {
-            fn from(error: $t) -> $err {
-                $err {
-                    kind: $kind,
+    ($struct_error:ident, $error_type: path, $error_kind: path) => {
+        impl From<$error_type> for $struct_error {
+            fn from(error: $error_type) -> $struct_error {
+                $struct_error {
+                    kind: $error_kind,
                     message: error.to_string(),
                 }
             }
@@ -83,67 +57,42 @@ macro_rules! implement_error {
     };
 }
 
-/// Generate the [From<T>] trait implementation for an custom error struct with an specific
-/// structure, with ErrorKind, and message attributes. Use only if you want recovery the ErrorKind.
+/// Implement the [`From`] trait for an struct with an specific structure, with ErrorKind,
+/// and message attributes.
 ///
-/// **Warning**: This macro use the `kind()` method. Make sure that the error implemented this method.
-///
-/// * Param 1: the custom error type,
-/// * Param 2: the error type you wants use in From trait,
-/// * Param 3: the corresponding ErrorKind.
-///
+/// # Params
+/// ```ignore
+/// implement_in_error_in_struct($struct_error, $error_type, $error_kind);
+/// ```
 /// # Example
 /// ```
-/// use std::fmt::{Display, Formatter, Result, Debug};
-/// use std::io::Error;
 /// use heimdall_errors::implement_error_with_kind;
+/// use std::io;
 ///
-/// // First, create your ErrorKind
-///#[derive(Debug, PartialEq, Clone)]
-/// pub (crate) enum ErrorKind {
-///     Io(std::io::ErrorKind),
+/// pub enum ErrorKind {
+///     IO(io::ErrorKind),
 /// }
 ///
-/// impl ToString for ErrorKind {
-///     fn to_string(&self) -> String {
-///         format!("{:?}", &self)
-///     }
-/// }
-///
-/// // Next, create your Error struct
-/// #[derive(Debug, PartialEq, Clone)]
-/// pub (crate) struct MyErrorType {
+/// pub struct StructError {
 ///     kind: ErrorKind,
-///     message: String
+///     message: String,
 /// }
+/// // Implement From<io::Error> for StructError.
+/// implement_error_with_kind!(StructError, io::Error, ErrorKind::IO);
 ///
-/// // Implement the Display trait
-/// impl Display for MyErrorType {
-///     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-///         write!(
-///             f,
-///             "kind: {} message: {}",
-///             self.kind.to_string(),
-///             self.message
-///         )
-///     }
-/// }
-///
-/// // Generate implementation
-/// implement_error_with_kind!(MyErrorType, std::io::Error, ErrorKind::Io);
 /// ```
 ///
 ///# Code generated
 /// The code
 /// ```ignore
-/// implement_error_with_kind!(MyErrorType, std::io::Error, ErrorKind::Io);
+/// implement_error_with_kind!(StructError, io::Error, ErrorKind::IO);
 /// ```
 ///
 /// generates the next code
 ///
 ///```ignore
-/// impl From<std::io::Error> for MyErrorType {
-///    fn from(err: std::io::Error) -> Self {
+/// impl From<io::Error> for StructError {
+///    fn from(err: io::Error) -> Self {
 ///        Self {
 ///            kind: ErrorKind::Io(err.kind()),
 ///            message: err.to_string(),
@@ -165,53 +114,53 @@ macro_rules! implement_error_with_kind {
     };
 }
 
-/// Generate the [From<T>] trait implementation for an custom enum error.
-/// # Usage
+/// Implement the [`From`] trait for an enum.
+///
+/// **WARNING**: you might prefer to use [thiserror] instead of this macro.
+///
+/// # Params
 /// ```ignore
 ///     implement_error_in_enum!($type_, $err_type, $enum_variant);
 /// ```
-/// * **$type_:** the enum error type,
-/// * **$error_type:** the value [T] in [From<T>] trait, this type must implement [ToString] trait,
-/// * **$enum_variant:** the enum error type variant.
 ///
 /// # Example
-/// ```
+///```
 /// use std::fmt::Debug;
 /// use std::io::Error;
 /// use heimdall_errors::implement_error_in_enum;
 ///
 ///
-/// // First, create your Error type
-/// #[derive(Debug)]
-/// pub (crate) enum MyErrorType {
-///     Io(Error)
+/// pub (crate) enum EnumError {
+///     IO(Error)
 /// }
 ///
 ///
-/// // Generate implementation
-/// implement_error_in_enum!(MyErrorType, std::io::Error, MyErrorType::Io);
+/// // Implement From<Error> for StructError.
+/// implement_error_in_enum!(EnumError, Error, EnumError::IO);
 /// ```
 ///
 ///# Code generated
 /// The code
 /// ```ignore
-/// implement_error_in_enum!(MyErrorType, std::io::Error, MyErrorType::Io);
+/// implement_error_in_enum!(EnumError, Error, EnumError::IO);
 /// ```
 ///
 /// generates the next code
 ///
 ///```ignore
-/// impl From<std::io::Error> for MyErrorType {
-///    fn from(err: std::io::Error) -> Self {
-///        MyErrorType::Io(err)
+/// impl From<Error> for EnumError {
+///    fn from(err: Error) -> Self {
+///        EnumError::Io(err)
 ///     }
 /// }
 /// ```
+///
+/// [thiserror]:https://crates.io/crates/thiserror
 #[macro_export]
 macro_rules! implement_error_in_enum {
-    ($type_:ident, $err_type: path, $enum_variant: path) => {
-        impl From<$err_type> for $type_ {
-            fn from(error: $err_type) -> $type_ {
+    ($enum_error:ident, $err_type: path, $enum_variant: path) => {
+        impl From<$err_type> for $enum_error {
+            fn from(error: $err_type) -> $enum_error {
                 $enum_variant(error)
             }
         }
@@ -219,52 +168,45 @@ macro_rules! implement_error_in_enum {
 }
 
 /// Generate the [From<T>] trait implementation for an custom enum error using [ToString] trait.
-/// # Usage
+/// # Params
 /// ```ignore
-///     implement_error_in_enum!($type_, $err_type, $enum_variant);
+///     implement_error_in_enum!($enum_error, $err_type, $enum_variant);
 /// ```
-/// * **$type_:** the enum error type,
-/// * **$error_type:** the value [T] in [From<T>] trait, this type must implement [ToString] trait,
-/// * **$enum_variant:** the enum error type variant.
-///
 /// # Example
 /// ```
 /// use std::fmt::Debug;
-/// use std::io::Error;
 /// use heimdall_errors::implement_string_error_in_enum;
 ///
 ///
-/// // First, create your Error type
-/// #[derive(Debug)]
-/// pub (crate) enum MyErrorType {
-///     Io(String)
+/// pub (crate) enum EnumError {
+///     IO(String)
 /// }
 ///
 ///
-/// // Generate implementation
-/// implement_string_error_in_enum!(MyErrorType, std::io::Error, MyErrorType::Io);
+/// // Implement From<Error> for StructError.
+/// implement_string_error_in_enum!(EnumError, std::io::Error, EnumError::IO);
 /// ```
 ///
 ///# Code generated
 /// The code
 /// ```ignore
-/// implement_string_error_in_enum!(MyErrorType, std::io::Error, MyErrorType::Io);
+/// implement_string_error_in_enum!(EnumError, std::io::Error, EnumError::IO);
 /// ```
 ///
 /// generates the next code
 ///
 ///```ignore
-/// impl From<std::io::Error> for MyErrorType {
+/// impl From<std::io::Error> for EnumError {
 ///    fn from(err: std::io::Error) -> Self {
-///        MyErrorType::Io(err.to_string())
+///        EnumError::Io(err.to_string())
 ///     }
 /// }
 /// ```
 #[macro_export]
 macro_rules! implement_string_error_in_enum {
-    ($type_:ident, $err_type: path, $enum_variant: path) => {
-        impl From<$err_type> for $type_ {
-            fn from(error: $err_type) -> $type_ {
+    ($enum_error:ident, $err_type: path, $enum_variant: path) => {
+        impl From<$err_type> for $enum_error {
+            fn from(error: $err_type) -> $enum_error {
                 $enum_variant(error.to_string())
             }
         }

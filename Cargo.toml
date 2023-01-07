@@ -1,9 +1,21 @@
 [package]
 name = "heimdall_errors"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 authors = ["johnteper <johnteper@stellamar.tech>"]
-description = "Macro for rust errors"
+description = "Macros for From trait errors"
 license = "MIT"
 repository = "https://github.com/StellaMarTech/heimdall-errors"
 homepage = "https://github.com/StellaMarTech/heimdall-errors"
+
+[[example]]
+name = "struct_v1"
+path = "examples/struct_error_v1.rs"
+
+[[example]]
+name = "struct_v2"
+path = "examples/struct_error_v2.rs"
+
+[[example]]
+name = "enum_v1"
+path = "examples/enum_error_v1.rs"
